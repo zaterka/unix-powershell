@@ -1,0 +1,47 @@
+name: test
+
+on:
+  push:
+    branches: [ main ]
+  pull_request:
+    branches: [ main ]
+  workflow_dispatch:
+
+jobs:
+  pester:
+    # Native amd64: avoids the arm64 emulation segfault that makes the pwsh
+    # alpine image unusable locally, and is the fastest path for CI.
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Show PowerShell version
+        shell: pwsh
+        run: $PSVersionTable | Out-String | Write-Host
+
+      - name: Install Pester
+        shell: pwsh
+        run: |
+          Install-Module Pester -Scope CurrentUser -RequiredVersion 5.7.1 -Force -SkipPublisherCheck -ErrorAction Stop
+
+      - name: Run Pester suite
+        shell: pwsh
+        run: ./test/Run-Tests.ps1 -CI
+
+  ascii-guard:
+    # Cheap independent gate: every tracked script and doc must be pure ASCII.
+    # The same rule is enforced inside the suite, but failing here is faster to read.
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Reject non-ASCII bytes
+        run: |
+          set +e
+          hits=$(LC_ALL=C grep -RIn '[^ -~]' --include='*.ps1' --include='*.md' --include='*.json' . )
+          if [ -n "$hits" ]; then
+            echo "Non-ASCII content found:"
+            echo "$hits"
+            exit 1
+          fi
+          echo "all text files are pure ASCII"

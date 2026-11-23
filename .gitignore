@@ -1,0 +1,20 @@
+# unix-powershell
+
+# Local install/backup artefacts
+*.bak
+*.bak.*
+config.json.bad
+
+# Test artefacts
+test-results.xml
+*.NUnit.xml
+
+# Editor / OS noise
+.DS_Store
+.vscode/
+.idea/
+*.swp
+
+# Local docker client state (sandboxed environments only)
+.docker-tmp/
+PLAN.md
